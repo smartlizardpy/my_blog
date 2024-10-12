@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Include Highlight.js with dark theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- Preconnect and font links -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sixtyfour+Convergence&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #000;
+            /* Dark background */
+            color: #fff;
+            /* Light text color */
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1,
+        h3,
+        h4,
+        h5,
+        h6 {
+            text-align: center;
+            color: #e70808;
+            font-size: 3rem;
+        }
+
+        .oz {
+            text-align: center;
+            color: #efefef;
+            font-size: 3rem;
+        }
+
+        h2 {
+            font-family: 'Sixtyfour Convergence', sans-serif;
+            font-size: 2.5rem;
+            margin-top: 20px;
+            color: #de0000;
+        }
+
+        p {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.9rem;
+            color: #aaa;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* Loading popup styles */
+        .loading-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            /* Initially hidden */
+            justify-content: center;
+            align-items: center;
+            color: lime;
+            font-size: 1.5rem;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .loading-popup-text {
+            margin-bottom: 20px;
+            text-align: center;
+            animation: blink 1.5s infinite step-start;
+        }
+
+        /* Blinking text effect */
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .loading-bar-container {
+            width: 70%;
+            background-color: #555;
+            height: 20px;
+            margin-top: 10px;
+            border: 2px solid #fff;
+            padding: 3px;
+            box-sizing: border-box;
+            overflow: hidden;
+            /* Prevent overflow */
+        }
+
+        .loading-bar {
+            width: 0;
+            height: 100%;
+            background-color: lime;
+            transition: width 0.1s;
+            /* Smooth transition */
+        }
+
+        .bla4 {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .copy-btn {
+            background-color: #e70808;
+            /* Button color */
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: #d00707;
+            /* Darker shade on hover */
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="oz">Smartlizardpy</h1>
+    <h2 id="post-title"></h2>
+    <div id="post-content"></div>
+
+    <!-- Loading popup -->
+    <div class="loading-popup" id="loading-popup">
+        <div class="loading-popup-text">Fetching Content, please wait...</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p class="bla4">&copy; 2024 Smartlizard. All rights reserved.</p>
+    </div>
+
+    <script>
+        // Function to fetch post data from the server
+        async function fetchPostData() {
+            const postId = window.location.pathname.split('/').pop(); // Extract the ID from the URL
+            const loadingPopup = document.getElementById('loading-popup');
+            const loadingBar = document.getElementById('loading-bar');
+
+            try {
+                // Show the loading popup
+                loadingPopup.style.display = 'flex';
+
+                // Simulate loading bar progression
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                    } else {
+                        width += 5; // Increment the width
+                        loadingBar.style.width = width + '%';
+                    }
+                }, 100); // Speed of the loading bar
+
+                const response = await fetch(`/api/post/${postId}`);
+
+                if (response.ok) {
+                    const post = await response.json();
+
+                    // Update the title and content
+                    document.getElementById('post-title').innerText = post.title; // Set post title
+
+                    // Set post content and highlight code blocks
+                    const contentHTML = marked.parse(post.md); // Parse Markdown to HTML
+                    document.getElementById('post-content').innerHTML = contentHTML;  // Set post content
+
+                    // Highlight code blocks and add copy buttons
+                    const codeBlocks = document.querySelectorAll('pre code');
+                    codeBlocks.forEach(block => {
+                        hljs.highlightBlock(block);
+
+                        // Create copy button
+                        const copyBtn = document.createElement('button');
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.className = 'copy-btn';
+                        copyBtn.onclick = () => copyToClipboard(block.innerText);
+
+                        // Insert the button after the code block
+                        block.parentNode.insertBefore(copyBtn, block.nextSibling);
+                    });
+                } else {
+                    document.getElementById('post-title').innerText = 'Post not found';
+                    document.getElementById('post-content').innerText = 'The requested post does not exist.';
+                }
+            } catch (error) {
+                document.getElementById('post-title').innerText = 'Error';
+                document.getElementById('post-content').innerText = 'Failed to load the post.';
+            } finally {
+                // Hide the loading popup after the fetch completes
+                loadingPopup.style.display = 'none';
+                loadingBar.style.width = '0'; // Reset loading bar
+            }
+        }
+
+        // Function to copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    alert('Code copied to clipboard!'); // Feedback to user
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+        }
+
+        // Call the function to fetch post data when the page loads
+        window.onload = fetchPostData;
+    </script>
+</body>
+
+</html>
